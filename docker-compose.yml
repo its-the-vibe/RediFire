@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  redfire:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redfire
+    restart: unless-stopped
+    environment:
+      # Configuration file path
+      - CONFIG_PATH=/app/config.yaml
+      # Redis password (optional, can also be set in config.yaml)
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      # Google Cloud credentials (optional, can also be set in config.yaml)
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+    volumes:
+      # Mount your configuration file
+      - ./config.yaml:/app/config.yaml:ro
+      # Mount your Google Cloud credentials file (if using file-based auth)
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-./credentials.json}:/app/credentials.json:ro
+    # No Redis service here - connects to external Redis
+    networks:
+      - redfire-network
+
+networks:
+  redfire-network:
+    driver: bridge
