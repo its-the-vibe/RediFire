@@ -1,0 +1,21 @@
+# Example configuration for RediFire
+
+# Redis configuration
+redis:
+  host: "localhost:6379"
+  # Password can also be set via REDIS_PASSWORD environment variable
+  password: ""
+  db: 0
+
+# Firestore configuration
+firestore:
+  projectID: "your-gcp-project-id"
+  # Credentials file path (or use GOOGLE_APPLICATION_CREDENTIALS env var)
+  credentialsFile: ""
+
+# Mapping of Redis lists to Firestore collections
+mappings:
+  - source: "events_queue"
+    target: "events"
+  - source: "users_queue"
+    target: "users"
