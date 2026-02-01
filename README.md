@@ -48,12 +48,12 @@ mappings:
 
 ```bash
 # Build
-go build -o redfire .
+go build -o redifire .
 
 # Run
 export REDIS_PASSWORD="your-redis-password"
 export GOOGLE_APPLICATION_CREDENTIALS="/path/to/credentials.json"
-./redfire
+./redifire
 ```
 
 ### Running with Docker Compose
@@ -69,7 +69,7 @@ docker-compose up -d
 ### Building Docker Image
 
 ```bash
-docker build -t redfire:latest .
+docker build -t redifire:latest .
 ```
 
 ## Data Format

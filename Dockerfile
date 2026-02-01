@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25.6-alpine AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o redfire .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o redifire .
 
 # Runtime stage
 FROM scratch
@@ -21,7 +21,7 @@ FROM scratch
 WORKDIR /app
 
 # Copy the binary from builder
-COPY --from=builder /app/redfire /app/redfire
+COPY --from=builder /app/redifire /app/redifire
 
 # Copy CA certificates for HTTPS connections
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
@@ -29,4 +29,4 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 # Copy example config (optional, users should mount their own)
 COPY --from=builder /app/config.example.yaml /app/config.example.yaml
 
-ENTRYPOINT ["/app/redfire"]
+ENTRYPOINT ["/app/redifire"]
