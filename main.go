@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -102,9 +102,9 @@ func run() error {
 	return nil
 }
 
-// computeSHA1 computes the SHA-1 hash of the given data
-func computeSHA1(data []byte) string {
-	hash := sha1.Sum(data)
+// computeSHA256 computes the SHA-256 hash of the given data
+func computeSHA256(data string) string {
+	hash := sha256.Sum256([]byte(data))
 	return hex.EncodeToString(hash[:])
 }
 
@@ -141,8 +141,8 @@ func worker(ctx context.Context, redisClient *redis.Client, firestoreClient *fir
 
 			message := result[1]
 
-			// Compute SHA-1 hash of the message to use as document ID
-			docID := computeSHA1([]byte(message))
+			// Compute SHA-256 hash of the message to use as document ID
+			docID := computeSHA256(message)
 
 			// Parse JSON payload
 			var payload map[string]interface{}
@@ -157,7 +157,7 @@ func worker(ctx context.Context, redisClient *redis.Client, firestoreClient *fir
 				Timestamp: time.Now().UTC(),
 			}
 
-			// Write to Firestore with SHA-1 hash as document ID
+			// Write to Firestore with SHA-256 hash as document ID
 			docRef := firestoreClient.Collection(mapping.Target).Doc(docID)
 			if _, err := docRef.Set(ctx, record); err != nil {
 				log.Printf("[%s] Error writing to Firestore: %v", mapping.Source, err)
