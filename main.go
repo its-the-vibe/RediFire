@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -100,6 +102,12 @@ func run() error {
 	return nil
 }
 
+// computeSHA1 computes the SHA-1 hash of the given data
+func computeSHA1(data []byte) string {
+	hash := sha1.Sum(data)
+	return hex.EncodeToString(hash[:])
+}
+
 func worker(ctx context.Context, redisClient *redis.Client, firestoreClient *firestore.Client, mapping config.Mapping) {
 	log.Printf("[%s] Worker started", mapping.Source)
 
@@ -133,6 +141,9 @@ func worker(ctx context.Context, redisClient *redis.Client, firestoreClient *fir
 
 			message := result[1]
 
+			// Compute SHA-1 hash of the message to use as document ID
+			docID := computeSHA1([]byte(message))
+
 			// Parse JSON payload
 			var payload map[string]interface{}
 			if err := json.Unmarshal([]byte(message), &payload); err != nil {
@@ -146,8 +157,8 @@ func worker(ctx context.Context, redisClient *redis.Client, firestoreClient *fir
 				Timestamp: time.Now().UTC(),
 			}
 
-			// Write to Firestore
-			docRef := firestoreClient.Collection(mapping.Target).NewDoc()
+			// Write to Firestore with SHA-1 hash as document ID
+			docRef := firestoreClient.Collection(mapping.Target).Doc(docID)
 			if _, err := docRef.Set(ctx, record); err != nil {
 				log.Printf("[%s] Error writing to Firestore: %v", mapping.Source, err)
 				// In production, you might want to push back to Redis or a dead-letter queue
