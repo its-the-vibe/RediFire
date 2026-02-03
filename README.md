@@ -11,6 +11,7 @@ A simple service in Go which pops JSON records from a Redis list and saves them 
 - Docker support with scratch-based runtime
 - External Redis connection with password authentication
 - Automatic insertion timestamps
+- Dead Letter Queue (DLQ) for failed message processing
 
 ## Configuration
 
@@ -84,6 +85,37 @@ Messages are popped from Redis lists and stored in Firestore with the following 
   "timestamp": "2026-02-01T20:15:00Z"
 }
 ```
+
+## Dead Letter Queue (DLQ)
+
+RediFire includes built-in support for a Dead Letter Queue to handle failed message processing:
+
+### Behavior
+
+- When a message fails to process (e.g., Firestore write error or invalid JSON), it is automatically pushed to a DLQ
+- The DLQ is a Redis list with the same name as the source list, with `-dlq` appended
+- Example: Messages from `events_queue` that fail will be pushed to `events_queue-dlq`
+
+### Use Cases
+
+The DLQ captures failed messages in these scenarios:
+- **Invalid JSON**: Messages that cannot be parsed as JSON
+- **Firestore write errors**: Messages that fail to save to Firestore (network issues, permissions, etc.)
+
+### Monitoring
+
+All DLQ events are logged for monitoring and debugging:
+```
+[events_queue] Message pushed to DLQ events_queue-dlq
+[users_queue] Invalid JSON message pushed to DLQ users_queue-dlq
+```
+
+### Recovery
+
+Failed messages in the DLQ can be:
+- Inspected for debugging using Redis commands: `LRANGE events_queue-dlq 0 -1`
+- Reprocessed by pushing them back to the source queue: `RPOPLPUSH events_queue-dlq events_queue`
+- Cleared if no longer needed: `DEL events_queue-dlq`
 
 ## Requirements
 
