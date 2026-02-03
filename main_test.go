@@ -60,3 +60,41 @@ func TestComputeSHA256Different(t *testing.T) {
 		t.Errorf("computeSHA256 produced the same hash for different inputs: %q", hash1)
 	}
 }
+
+func TestGetDLQName(t *testing.T) {
+	tests := []struct {
+		name     string
+		source   string
+		expected string
+	}{
+		{
+			name:     "simple queue",
+			source:   "events_queue",
+			expected: "events_queue-dlq",
+		},
+		{
+			name:     "users queue",
+			source:   "users_queue",
+			expected: "users_queue-dlq",
+		},
+		{
+			name:     "queue with hyphen",
+			source:   "my-queue",
+			expected: "my-queue-dlq",
+		},
+		{
+			name:     "queue with underscores",
+			source:   "my_custom_queue",
+			expected: "my_custom_queue-dlq",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getDLQName(tt.source)
+			if result != tt.expected {
+				t.Errorf("getDLQName(%q) = %q, want %q", tt.source, result, tt.expected)
+			}
+		})
+	}
+}

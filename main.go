@@ -108,6 +108,11 @@ func computeSHA256(data string) string {
 	return hex.EncodeToString(hash[:])
 }
 
+// getDLQName returns the DLQ name for a given source list
+func getDLQName(source string) string {
+	return source + "-dlq"
+}
+
 func worker(ctx context.Context, redisClient *redis.Client, firestoreClient *firestore.Client, mapping config.Mapping) {
 	log.Printf("[%s] Worker started", mapping.Source)
 
@@ -148,6 +153,14 @@ func worker(ctx context.Context, redisClient *redis.Client, firestoreClient *fir
 			var payload map[string]interface{}
 			if err := json.Unmarshal([]byte(message), &payload); err != nil {
 				log.Printf("[%s] Error parsing JSON: %v, message: %s", mapping.Source, err, message)
+				
+				// Push invalid JSON to DLQ
+				dlqName := getDLQName(mapping.Source)
+				if pushErr := redisClient.RPush(ctx, dlqName, message).Err(); pushErr != nil {
+					log.Printf("[%s] Error pushing to DLQ %s: %v", mapping.Source, dlqName, pushErr)
+				} else {
+					log.Printf("[%s] Invalid JSON message pushed to DLQ %s", mapping.Source, dlqName)
+				}
 				continue
 			}
 
@@ -161,7 +174,14 @@ func worker(ctx context.Context, redisClient *redis.Client, firestoreClient *fir
 			docRef := firestoreClient.Collection(mapping.Target).Doc(docID)
 			if _, err := docRef.Set(ctx, record); err != nil {
 				log.Printf("[%s] Error writing to Firestore: %v", mapping.Source, err)
-				// In production, you might want to push back to Redis or a dead-letter queue
+				
+				// Push failed message to DLQ
+				dlqName := getDLQName(mapping.Source)
+				if pushErr := redisClient.RPush(ctx, dlqName, message).Err(); pushErr != nil {
+					log.Printf("[%s] Error pushing to DLQ %s: %v", mapping.Source, dlqName, pushErr)
+				} else {
+					log.Printf("[%s] Message pushed to DLQ %s", mapping.Source, dlqName)
+				}
 				continue
 			}
 
