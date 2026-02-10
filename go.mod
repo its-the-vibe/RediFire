@@ -1,6 +1,8 @@
 module github.com/its-the-vibe/RediFire
 
-go 1.25.6
+go 1.25
+
+toolchain go1.25.7
 
 require (
 	cloud.google.com/go/firestore v1.21.0
