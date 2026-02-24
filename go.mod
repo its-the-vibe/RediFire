@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	cloud.google.com/go/firestore v1.21.0
 	github.com/redis/go-redis/v9 v9.18.0
-	google.golang.org/api v0.267.0
+	google.golang.org/api v0.268.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
