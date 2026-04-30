@@ -1,5 +1,7 @@
 # RediFire
 
+[![CI](https://github.com/its-the-vibe/RediFire/actions/workflows/ci.yaml/badge.svg)](https://github.com/its-the-vibe/RediFire/actions/workflows/ci.yaml)
+
 A simple service in Go which pops JSON records from a Redis list and saves them to Firestore.
 
 ## Features
