@@ -1,5 +1,8 @@
 # Build stage
-FROM golang:1.26.6-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.6-alpine AS builder
+
+ARG TARGETOS
+ARG TARGETARCH
 
 WORKDIR /app
 
@@ -13,20 +16,19 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o redifire .
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -trimpath -ldflags="-s -w" -o redifire .
 
-# Runtime stage
-FROM scratch
+# Runtime stage (distroless)
+FROM gcr.io/distroless/static-debian13:nonroot
 
 WORKDIR /app
 
 # Copy the binary from builder
 COPY --from=builder /app/redifire /app/redifire
 
-# Copy CA certificates for HTTPS connections
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
 # Copy example config (optional, users should mount their own)
 COPY --from=builder /app/config.example.yaml /app/config.example.yaml
+
+USER nonroot:nonroot
 
 ENTRYPOINT ["/app/redifire"]
