@@ -3,7 +3,7 @@ module github.com/its-the-vibe/RediFire
 go 1.27.1
 
 require (
-	cloud.google.com/go/firestore v1.25.0
+	cloud.google.com/go/firestore v1.26.0
 	github.com/redis/go-redis/v9 v9.22.0
 	google.golang.org/api v0.299.0
 	gopkg.in/yaml.v3 v3.0.1
