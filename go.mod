@@ -5,7 +5,7 @@ go 1.27.3
 require (
 	cloud.google.com/go/firestore v1.28.0
 	github.com/redis/go-redis/v9 v9.23.0
-	google.golang.org/api v0.307.0
+	google.golang.org/api v0.308.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
